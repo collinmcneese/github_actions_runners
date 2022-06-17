@@ -12,7 +12,7 @@ RUN useradd -m docker
 # Install dependencies
 RUN apt update \ 
     # && apt install -y curl build-essential libssl-dev libffi-dev python3 python3-venv python3-dev python3-pip  --no-install-recommends
-    && apt install -y curl ca-certificates --no-install-recommends
+    && apt install -y curl ca-certificates jq --no-install-recommends
 
 # Fetch and extract the GitHub Actions Runner
 RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
