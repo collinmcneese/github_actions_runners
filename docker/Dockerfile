@@ -4,7 +4,7 @@ ARG BASE_IMAGE="ubuntu:22.04"
 # Base image information
 FROM --platform=${PLATFORM} ${BASE_IMAGE}
 
-ARG RUNNER_VERSION="2.293.0"
+ARG RUNNER_VERSION="2.294.0"
 
 # Add a non-priviledged user
 RUN useradd -m docker
