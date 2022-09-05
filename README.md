@@ -6,7 +6,13 @@ Working repository with reference examples for building self-hosted runners for 
 
 The contents of this repository are _not_ meant to be run in a production environment and are for refernce example only.  This is still an active _Work In Progress_ and likely should not be used by anyone, for any reason.
 
+## References
+
+- [https://github.com/actions/runner/](https://github.com/actions/runner/)
+
 ## Container Image
+
+Builds a [GitHub Actions Runner](https://github.com/actions/runner/) container :ship:.
 
 This repository has a reference [docker](./docker) example which contains a `Dockerfile` for building an image along with a `docker-compose` configuration for local testing.
 
