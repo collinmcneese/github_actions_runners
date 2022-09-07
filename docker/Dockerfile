@@ -4,13 +4,16 @@ ARG BASE_IMAGE="ubuntu:22.04"
 # Base image information
 FROM --platform=${PLATFORM} ${BASE_IMAGE}
 
-ARG RUNNER_VERSION="$(cat ../VERSION)"
+ARG RUNNER_VERSION
+RUN \
+    # Check for mandatory build arguments
+    : "${RUNNER_VERSION:?Build argument RUNNER_VERSION needs to be set and non-empty.}"
 
 # Add a non-priviledged user
 RUN useradd -m docker
 
 # Install dependencies
-RUN apt update \ 
+RUN apt update \
     # && apt install -y curl build-essential libssl-dev libffi-dev python3 python3-venv python3-dev python3-pip  --no-install-recommends
     && apt install -y curl ca-certificates jq --no-install-recommends
 
