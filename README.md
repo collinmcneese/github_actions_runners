@@ -20,14 +20,16 @@ The image configuration built from this example is published to [GitHub Packages
 
 The container image reference:
 
-- Is meant for organization-scoped runners.  See [Docs](https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-an-organization) for additional information.
+- Is meant for [organization](https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-an-organization) or [repository](https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-a-repository) scoped runners.  See [Docs](https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners) for additional information.
 
 ### Building & Using the Container Image Locally
 
-- Create a `.env` file using the reference [.env.example](docker/.env.example)
-  
+- Create `docker/.env` file using the reference [docker/.env.example](docker/.env.example)
+
   ```shell
   GHRUNNER_ORGANIZATION=''
+  # Optionally specify a Repository
+  # GHRUNNER_REPOSITORY=''
   GHRUNNER_ACCESS_TOKEN=''
   GHRUNNER_LABELS="self-hosted,Linux,x64,dependabot"
   # Specify the base GitHub URL if not using github.com
