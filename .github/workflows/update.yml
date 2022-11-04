@@ -1,0 +1,67 @@
+# Check for updates against releases from github.com/actions/runner
+
+name: self-update
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+
+jobs:
+  get-runner-version:
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.get-runner-version.outputs.latest }}
+    steps:
+      - name: Get latest runner version
+        id: get-runner-version
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const latest = await github.repos.getLatestRelease({
+              owner: 'actions',
+              repo: 'runner'
+            })
+            return latest.data.tag_name.substring(1)
+  # Compare the latest runner version with the contents of VERSION
+  # If they don't match, update VERSION and create a pull request
+  update-runner-version:
+    needs: get-runner-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Update runner version
+        id: update-runner-version
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const latest = '${{ needs.get-runner-version.outputs.latest }}'
+            const versionPath = path.join('${{ github.workspace }}', 'VERSION')
+            const current = fs.readFileSync(versionPath, 'utf8')
+            if (current.trim() === latest.trim()) {
+              console.log('Runner is already up to date')
+              return
+            }
+            fs.writeFileSync(versionPath, latest)
+            const branch = `update-runner-${latest}`
+            await github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/heads/${branch}`,
+              sha: context.sha
+            })
+            await github.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Update runner to ${latest}`,
+              head: branch,
+              base: 'main',
+              body: 'This PR updates the runner to the latest version'
+            })
+            console.log(`Created pull request #${context.payload.pull_request.number}`)
