@@ -24,7 +24,9 @@ jobs:
               owner: 'actions',
               repo: 'runner'
             })
-            return latest.data.tag_name.substring(1)
+            return latest.data.tag_name
+      - name: Log latest runner version
+        run: echo ${{ steps.get-runner-version.outputs.latest }}
   # Compare the latest runner version with the contents of VERSION
   # If they don't match, update VERSION and create a pull request
   update-runner-version:
@@ -41,7 +43,7 @@ jobs:
           script: |
             const fs = require('fs')
             const path = require('path')
-            const latest = '${{ needs.get-runner-version.outputs.latest }}'
+            const latest = '${{ needs.get-runner-version.outputs.latest }}'.substring(1)
             const versionPath = path.join('${{ github.workspace }}', 'VERSION')
             const current = fs.readFileSync(versionPath, 'utf8')
             if (current.trim() === latest.trim()) {
