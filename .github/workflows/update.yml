@@ -20,7 +20,7 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const latest = await github.repos.getLatestRelease({
+            const latest = await github.rest.repos.getLatestRelease({
               owner: 'actions',
               repo: 'runner'
             })
@@ -52,13 +52,13 @@ jobs:
             }
             fs.writeFileSync(versionPath, latest)
             const branch = `update-runner-${latest}`
-            await github.git.createRef({
+            await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/heads/${branch}`,
               sha: context.sha
             })
-            await github.pulls.create({
+            await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Update runner to ${latest}`,
