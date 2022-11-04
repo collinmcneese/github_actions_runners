@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Get latest runner version
         id: get-runner-version
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Update runner version
         id: update-runner-version
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
