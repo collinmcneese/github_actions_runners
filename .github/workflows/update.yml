@@ -12,13 +12,14 @@ jobs:
   get-runner-version:
     runs-on: ubuntu-latest
     outputs:
-      latest: ${{ steps.get-runner-version.outputs.latest }}
+      latest: ${{ steps.get-runner-version.outputs.result }}
     steps:
       - name: Get latest runner version
         id: get-runner-version
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
           script: |
             const latest = await github.rest.repos.getLatestRelease({
               owner: 'actions',
@@ -26,7 +27,7 @@ jobs:
             })
             return latest.data.tag_name
       - name: Log latest runner version
-        run: echo ${{ steps.get-runner-version.outputs.latest }}
+        run: echo ${{ steps.get-runner-version.outputs.result }}
   # Compare the latest runner version with the contents of VERSION
   # If they don't match, update VERSION and create a pull request
   update-runner-version:
@@ -43,7 +44,7 @@ jobs:
           script: |
             const fs = require('fs')
             const path = require('path')
-            const latest = '${{ needs.get-runner-version.outputs.latest }}'.substring(1)
+            const latest = '${{ needs.get-runner-version.outputs.result }}'.substring(1)
             const versionPath = path.join('${{ github.workspace }}', 'VERSION')
             const current = fs.readFileSync(versionPath, 'utf8')
             if (current.trim() === latest.trim()) {
