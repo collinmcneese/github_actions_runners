@@ -4,7 +4,7 @@ name: self-update
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 9 1 * *'
   workflow_dispatch:
 
 
@@ -44,7 +44,7 @@ jobs:
           script: |
             const fs = require('fs')
             const path = require('path')
-            const latest = '${{ needs.get-runner-version.outputs.result }}'.substring(1)
+            const latest = '${{ needs.get-runner-version.outputs.latest }}'.substring(1)
             const versionPath = path.join('${{ github.workspace }}', 'VERSION')
             const current = fs.readFileSync(versionPath, 'utf8')
             if (current.trim() === latest.trim()) {
