@@ -62,9 +62,9 @@ jobs:
             await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Update runner to ${latest}`,
+              title: `[bot] Update runner to ${latest}`,
               head: branch,
               base: 'main',
-              body: 'This PR updates the runner to the latest version'
+              body: 'This PR updates the runner to the latest version \nhttps://github.com/actions/runner/releases/latest'
             })
             console.log(`Created pull request #${context.payload.pull_request.number}`)
