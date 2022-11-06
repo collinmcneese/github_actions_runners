@@ -65,6 +65,6 @@ jobs:
               title: `[bot] Update runner to ${latest}`,
               head: branch,
               base: 'main',
-              body: 'This PR updates the runner to the latest version \nhttps://github.com/actions/runner/releases/latest'
+              body: 'This PR updates the runner to the latest version \n https://github.com/actions/runner/releases/latest'
             })
             console.log(`Created pull request #${context.payload.pull_request.number}`)
