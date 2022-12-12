@@ -14,8 +14,35 @@ RUN useradd -m docker
 
 # Install dependencies
 RUN apt update \
-    # && apt install -y curl build-essential libssl-dev libffi-dev python3 python3-venv python3-dev python3-pip  --no-install-recommends
-    && apt install -y curl ca-certificates jq --no-install-recommends
+    && apt install -y --no-install-recommends \
+        gnupg \
+        lsb-release \
+        curl \
+        tar \
+        unzip \
+        apt-transport-https \
+        ca-certificates \
+        sudo \
+        gpg-agent \
+        software-properties-common \
+        build-essential \
+        zlib1g-dev \
+        zstd \
+        gettext \
+        libcurl4-openssl-dev \
+        inetutils-ping \
+        jq \
+        wget \
+        dirmngr \
+        openssh-client \
+        locales \
+        python3-pip \
+        python3-setuptools \
+        python3 \
+        dumb-init \
+        nodejs \
+        rsync \
+        gosu
 
 # Fetch and extract the GitHub Actions Runner
 RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
@@ -42,6 +69,10 @@ RUN apt update \
 
 # Set permissions for the docker user on extracted files
 RUN chown -R docker ~docker
+
+# Create hostedtoolcache directory and set permissions
+RUN mkdir -p /opt/hostedtoolcache \
+    && chown -R docker /opt/hostedtoolcache
 
 # Run Cleanup
 RUN apt clean -y && apt autoremove --purge -y
