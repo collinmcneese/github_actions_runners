@@ -5,17 +5,18 @@ on:
     outputs:
       release-version:
         description: 'The release version'
-        value: ${{ jobs.output-collector.outputs.version }}
+        value: ${{ jobs.release-version.outputs.version }}
 
 jobs:
-  output-collector:
+  release-version:
     runs-on: ubuntu-latest
     outputs:
-      release-version: ${{ steps.releaseversion.outputs.version }}
+      version: ${{ steps.releaseversion.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - id: releaseversion
+      - name: get release version
+        id: releaseversion
         run: |
           export ver=$(cat VERSION)
           echo "Outputting version: ${ver}"
