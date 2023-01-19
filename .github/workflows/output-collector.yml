@@ -16,4 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - id: releaseversion
-        run: ver=$(cat VERSION) && echo "version=${ver}" >> $GITHUB_OUTPUT
+        run: |
+          export ver=$(cat VERSION)
+          echo "Outputting version: ${ver}"
+          echo "version=${ver}" >> $GITHUB_OUTPUT
