@@ -15,15 +15,7 @@ env:
 
 jobs:
   output-collector:
-    runs-on: ubuntu-latest
-    outputs:
-      release-version: ${{ steps.releaseversion.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - id: releaseversion
-        run: ver=$(cat VERSION) && echo "::set-output name=version::${ver}"
-
+    uses: ./.github/workflows/output-collector.yml
 
   build-and-push-image:
     runs-on: ubuntu-latest

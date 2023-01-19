@@ -1,0 +1,23 @@
+name: output-collector
+
+on:
+  workflow_call:
+    outputs:
+      release-version:
+        description: 'The release version'
+        value: ${{ jobs.release-version.outputs.version }}
+
+jobs:
+  release-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.releaseversion.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: get release version
+        id: releaseversion
+        run: |
+          export ver=$(cat VERSION)
+          echo "Outputting version: ${ver}"
+          echo "version=${ver}" >> $GITHUB_OUTPUT
