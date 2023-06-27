@@ -10,12 +10,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  output-collector:
-    uses: ./.github/workflows/output-collector.yml
-
   build-image:
     runs-on: ubuntu-latest
-    needs: output-collector
     permissions:
       contents: read
       packages: write
@@ -24,10 +20,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Output Collector
+        id: output-collector
+        uses: collinmcneese/file-output-collector@build
+        with:
+          file: "./VERSION"
+
       - name: Prep
         run: |
-          echo Building with Runner version ${{ needs.output-collector.outputs.release-version }}
-          echo ${{ needs.output-collector.outputs.release-version }} | grep 2
+          echo Building with Runner version ${{ steps.output-collector.outputs.output }}
+          echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Log in to the Container registry
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
@@ -50,7 +52,7 @@ jobs:
           push: false
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            RUNNER_VERSION=${{needs.output-collector.outputs.release-version}}
+            RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{needs.output-collector.outputs.release-version}}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$${{ steps.output-collector.outputs.output }}
