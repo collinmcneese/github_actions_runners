@@ -55,4 +55,4 @@ jobs:
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$${{ steps.output-collector.outputs.output }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
