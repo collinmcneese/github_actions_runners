@@ -22,7 +22,7 @@ jobs:
 
       - name: Output Collector
         id: output-collector
-        uses: collinmcneese/file-output-collector@build
+        uses: collinmcneese/file-output-collector@main
         with:
           file: "./VERSION"
 
