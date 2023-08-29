@@ -25,7 +25,8 @@ jobs:
               owner: 'actions',
               repo: 'runner'
             })
-            return latest.data.tag_name
+            let version = latest.data.tag_name.substring(1)
+            return version
       - name: Log latest runner version
         run: echo ${{ steps.get-runner-version.outputs.result }}
   # Compare the latest runner version with the contents of VERSION
@@ -41,30 +42,45 @@ jobs:
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
           script: |
-            const fs = require('fs')
-            const path = require('path')
-            const latest = '${{ needs.get-runner-version.outputs.latest }}'.substring(1)
-            const versionPath = path.join('${{ github.workspace }}', 'VERSION')
-            const current = fs.readFileSync(versionPath, 'utf8')
+            const fs = require('fs');
+            const path = require('path');
+            const latest = '${{ needs.get-runner-version.outputs.latest }}';
+            const versionPath = path.join('${{ github.workspace }}', 'VERSION');
+            const current = fs.readFileSync(versionPath, 'utf8');
+
+            let changed;
+
             if (current.trim() === latest.trim()) {
               console.log('Runner is already up to date')
-              return
+              changed = 'false'
+              return changed
+            } else {
+              console.log('Runner is out of date')
+              changed = 'true'
+              fs.writeFileSync(versionPath, latest)
+              return changed
             }
-            fs.writeFileSync(versionPath, latest)
-            const branch = `update-runner-${latest}`
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branch}`,
-              sha: context.sha
-            })
-            await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `[bot] Update runner to ${latest}`,
-              head: branch,
-              base: 'main',
-              body: 'This PR updates the runner to the latest version \n https://github.com/actions/runner/releases/latest'
-            })
-            console.log(`Created pull request #${context.payload.pull_request.number}`)
+      - name: Log changed
+        run: echo 'VERSION changed -- ${{ steps.update-runner-version.outputs.result }}'
+      - name: Commit Changes
+        if: steps.update-runner-version.outputs.result == 'true'
+        run: |
+          # If the runner version has changed, commit the change, push the branch and create a pull request
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add VERSION
+          git commit -m 'Update runner version to ${{ needs.get-runner-version.outputs.latest }}'
+      - name: Create Pull Request
+        if: steps.update-runner-version.outputs.result == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          commit-message: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
+          title: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
+          body: |
+            This pull request updates the runner version to ${{ needs.get-runner-version.outputs.latest }}.
+            Please review and merge if no changes are required.
+          branch: update-runner-version-${{ needs.get-runner-version.outputs.latest }}
+          branch-suffix: timestamp
