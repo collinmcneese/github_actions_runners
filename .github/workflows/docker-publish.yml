@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Output Collector
         id: output-collector
         uses: collinmcneese/file-output-collector@main
