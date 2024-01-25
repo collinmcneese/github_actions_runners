@@ -10,9 +10,10 @@ RUN \
     : "${RUNNER_VERSION:?Build argument RUNNER_VERSION needs to be set and non-empty.}"
 
 # Add a non-priviledged user
-RUN groupadd docker -g 1001 \
-    && useradd docker \
-    && usermod -aG docker docker
+ARG RUNNER_USER_UID=1001
+ARG DOCKER_GROUP_GID=121
+RUN groupadd docker -g 121 \
+    && useradd docker -u 1001 -g 121
 
 # Install dependencies
 RUN apt update \
