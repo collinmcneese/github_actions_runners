@@ -15,6 +15,9 @@ env:
 
 jobs:
   build-and-push-image:
+    strategy:
+      matrix:
+        path: [docker, actions-runner-controller]
     environment: publish
     runs-on: ubuntu-latest
 
@@ -43,20 +46,42 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
+      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
+        if: ${{ matrix.path == 'docker' }}
+        id: meta-docker
         uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image
+      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
+        if: ${{ matrix.path == 'actions-runner-controller' }}
+        id: meta-arc
+        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and Push Docker image for ${{ matrix.path }}
+        if: ${{ matrix.path == 'docker' }}
         uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
           context: ./docker
           push: true
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta-docker.outputs.labels }}
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
+
+      - name: Build and Push Docker image for ${{ matrix.path }}
+        if: ${{ matrix.path == 'actions-runner-controller' }}
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        with:
+          context: ./actions-runner-controller
+          push: true
+          labels: ${{ steps.meta-arc.outputs.labels }}
+          build-args: |
+            RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}
