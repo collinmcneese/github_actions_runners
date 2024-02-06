@@ -74,7 +74,7 @@ jobs:
           git commit -m 'Update runner version to ${{ needs.get-runner-version.outputs.latest }}'
       - name: Create Pull Request
         if: steps.update-runner-version.outputs.result == 'true'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           commit-message: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
