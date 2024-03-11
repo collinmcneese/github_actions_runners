@@ -57,7 +57,7 @@ jobs:
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'docker' }}
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
         with:
           context: ./docker
           push: false
@@ -70,7 +70,7 @@ jobs:
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'actions-runner-controller' }}
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
         with:
           context: ./actions-runner-controller
           push: false
