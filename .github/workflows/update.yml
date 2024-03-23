@@ -1,0 +1,86 @@
+# Check for updates against releases from github.com/actions/runner
+
+name: self-update
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+
+jobs:
+  get-runner-version:
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.get-runner-version.outputs.result }}
+    steps:
+      - name: Get latest runner version
+        id: get-runner-version
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const latest = await github.rest.repos.getLatestRelease({
+              owner: 'actions',
+              repo: 'runner'
+            })
+            let version = latest.data.tag_name.substring(1)
+            return version
+      - name: Log latest runner version
+        run: echo ${{ steps.get-runner-version.outputs.result }}
+  # Compare the latest runner version with the contents of VERSION
+  # If they don't match, update VERSION and create a pull request
+  update-runner-version:
+    needs: get-runner-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update runner version
+        id: update-runner-version
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const latest = '${{ needs.get-runner-version.outputs.latest }}';
+            const versionPath = path.join('${{ github.workspace }}', 'VERSION');
+            const current = fs.readFileSync(versionPath, 'utf8');
+
+            let changed;
+
+            if (current.trim() === latest.trim()) {
+              console.log('Runner is already up to date')
+              changed = 'false'
+              return changed
+            } else {
+              console.log('Runner is out of date')
+              changed = 'true'
+              fs.writeFileSync(versionPath, latest)
+              return changed
+            }
+      - name: Log changed
+        run: echo 'VERSION changed -- ${{ steps.update-runner-version.outputs.result }}'
+      - name: Commit Changes
+        if: steps.update-runner-version.outputs.result == 'true'
+        run: |
+          # If the runner version has changed, commit the change, push the branch and create a pull request
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add VERSION
+          git commit -m 'Update runner version to ${{ needs.get-runner-version.outputs.latest }}'
+      - name: Create Pull Request
+        if: steps.update-runner-version.outputs.result == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          commit-message: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
+          title: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
+          body: |
+            This pull request updates the runner version to ${{ needs.get-runner-version.outputs.latest }}.
+            Please review and merge if no changes are required.
+          branch: update-runner-version-${{ needs.get-runner-version.outputs.latest }}
+          branch-suffix: timestamp
