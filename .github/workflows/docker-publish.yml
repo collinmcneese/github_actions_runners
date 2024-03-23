@@ -17,7 +17,7 @@ jobs:
   build-and-push-image:
     strategy:
       matrix:
-        path: [docker, actions-runner-controller]
+        path: [docker, actions-runner-controller, arc-container-dind]
     environment: publish
     runs-on: ubuntu-latest
 
