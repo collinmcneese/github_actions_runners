@@ -85,3 +85,16 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}
+
+      - name: Build and Push Docker image for ${{ matrix.path }}
+        if: ${{ matrix.path == 'arc-container-dind' }}
+        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
+        with:
+          context: ./arc-container-dind
+          push: true
+          labels: ${{ steps.meta-arc.outputs.labels }}
+          build-args: |
+            RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc-container-dind:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc-container-dind:${{ steps.output-collector.outputs.output }}
