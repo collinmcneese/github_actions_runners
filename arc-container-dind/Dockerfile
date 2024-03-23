@@ -85,10 +85,6 @@ RUN mkdir -p /opt/hostedtoolcache \
 # Run Cleanup
 RUN apt clean -y && apt autoremove --purge -y
 
-# copy the start.sh script & set permissions
-COPY start.sh start.sh
-RUN chmod +x start.sh
-
 # run as non-root user
 USER docker
 
