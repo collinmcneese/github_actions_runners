@@ -39,7 +39,7 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Log in to the Container registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -62,7 +62,7 @@ jobs:
 
       - name: Build and Push Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'docker' }}
-        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./docker
           push: true
@@ -75,7 +75,7 @@ jobs:
 
       - name: Build and Push Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'actions-runner-controller' }}
-        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./actions-runner-controller
           push: true
@@ -88,7 +88,7 @@ jobs:
 
       - name: Build and Push Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'arc-container-dind' }}
-        uses: docker/build-push-action@af5a7ed5ba88268d5278f7203fb52cd833f66d6e
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./arc-container-dind
           push: true
