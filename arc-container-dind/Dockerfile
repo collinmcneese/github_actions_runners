@@ -1,95 +1,120 @@
-ARG PLATFORM="linux/amd64"
-ARG BASE_IMAGE="ubuntu:22.04"
+FROM ubuntu:22.04
 
-# Base image information
-FROM --platform=${PLATFORM} ${BASE_IMAGE}
+ARG TARGETPLATFORM
+ARG RUNNER_VERSION='2.315.0'
+ARG RUNNER_CONTAINER_HOOKS_VERSION
+# Docker and Docker Compose arguments
+ARG CHANNEL=stable
+ARG DOCKER_VERSION=24.0.7
+ARG DOCKER_COMPOSE_VERSION=v2.23.0
+ARG DUMB_INIT_VERSION=1.2.5
+ARG RUNNER_USER_UID=1001
+ARG DOCKER_GROUP_GID=121
 
-ARG RUNNER_VERSION
-RUN \
-    # Check for mandatory build arguments
-    : "${RUNNER_VERSION:?Build argument RUNNER_VERSION needs to be set and non-empty.}"
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y \
+    && apt-get install -y software-properties-common \
+    && add-apt-repository -y ppa:git-core/ppa \
+    && apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    git \
+    iptables \
+    jq \
+    software-properties-common \
+    sudo \
+    unzip \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add a non-priviledged user
-RUN groupadd docker -g 121 \
-    && useradd -m docker -u 1001 -g 121
+# Download latest git-lfs version
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
+    apt-get install -y --no-install-recommends git-lfs
 
-# Install dependencies
-RUN apt update \
-    && apt install -y --no-install-recommends \
-        gnupg \
-        lsb-release \
-        curl \
-        tar \
-        unzip \
-        apt-transport-https \
-        ca-certificates \
-        sudo \
-        gpg-agent \
-        software-properties-common \
-        build-essential \
-        zlib1g-dev \
-        zstd \
-        gettext \
-        libcurl4-openssl-dev \
-        inetutils-ping \
-        jq \
-        wget \
-        dirmngr \
-        openssh-client \
-        locales \
-        python3-pip \
-        python3-setuptools \
-        python3 \
-        dumb-init \
-        nodejs \
-        rsync \
-        gosu
+# Runner user
+RUN adduser --disabled-password --gecos "" --uid $RUNNER_USER_UID runner \
+    && groupadd docker --gid $DOCKER_GROUP_GID \
+    && usermod -aG sudo runner \
+    && usermod -aG docker runner \
+    && echo "%sudo   ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers \
+    && echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >> /etc/sudoers
 
-# Install GitHub CLI
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && sudo apt update \
-    && sudo apt install gh -y
+ENV HOME=/home/runner
 
-# Fetch and extract the GitHub Actions Runner
-RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
-    && curl -O -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
-    && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
+RUN export ARCH=$(echo ${TARGETPLATFORM} | cut -d / -f2) \
+    && if [ "$ARCH" = "arm64" ]; then export ARCH=aarch64 ; fi \
+    && if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "i386" ]; then export ARCH=x86_64 ; fi \
+    && curl -fLo /usr/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_${ARCH} \
+    && chmod +x /usr/bin/dumb-init
 
-# Install GitHub Actions Runner pre-requisites
-RUN curl -O -L https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb  \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb
+ENV RUNNER_ASSETS_DIR=/runnertmp
+RUN export ARCH=$(echo ${TARGETPLATFORM} | cut -d / -f2) \
+    && if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "i386" ]; then export ARCH=x64 ; fi \
+    && mkdir -p "$RUNNER_ASSETS_DIR" \
+    && cd "$RUNNER_ASSETS_DIR" \
+    && curl -fLo runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${ARCH}-${RUNNER_VERSION}.tar.gz \
+    && tar xzf ./runner.tar.gz \
+    && rm -f runner.tar.gz \
+    && ./bin/installdependencies.sh \
+    # libyaml-dev is required for ruby/setup-ruby action.
+    # It is installed after installdependencies.sh and before removing /var/lib/apt/lists
+    # to avoid rerunning apt-update on its own.
+    && apt-get install -y libyaml-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt update \
-    && apt install -y apt-transport-https dotnet-sdk-6.0  --no-install-recommends
+ENV RUNNER_TOOL_CACHE=/opt/hostedtoolcache
+RUN mkdir /opt/hostedtoolcache \
+    && chgrp docker /opt/hostedtoolcache \
+    && chmod g+rwx /opt/hostedtoolcache
 
-# for Docker-in-Docker
-RUN apt update \
-    && apt install -y gnupg lsb-release  --no-install-recommends \
-    && apt remove docker docker-engine docker.io containerd runc \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt update \
-    && apt install -y docker-ce-cli --no-install-recommends
+RUN cd "$RUNNER_ASSETS_DIR" \
+    && curl -fLo runner-container-hooks.zip https://github.com/actions/runner-container-hooks/releases/download/v${RUNNER_CONTAINER_HOOKS_VERSION}/actions-runner-hooks-k8s-${RUNNER_CONTAINER_HOOKS_VERSION}.zip \
+    && unzip ./runner-container-hooks.zip -d ./k8s \
+    && rm -f runner-container-hooks.zip
 
-# Set permissions for the docker user on extracted files
-RUN chown -R docker ~docker
+RUN set -vx; \
+    export ARCH=$(echo ${TARGETPLATFORM} | cut -d / -f2) \
+    && if [ "$ARCH" = "arm64" ]; then export ARCH=aarch64 ; fi \
+    && if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "i386" ]; then export ARCH=x86_64 ; fi \
+    && curl -fLo docker.tgz https://download.docker.com/linux/static/${CHANNEL}/${ARCH}/docker-${DOCKER_VERSION}.tgz \
+    && tar zxvf docker.tgz \
+    && install -o root -g root -m 755 docker/* /usr/bin/ \
+    && rm -rf docker docker.tgz
 
-# Create hostedtoolcache directory and set permissions
-RUN mkdir -p /opt/hostedtoolcache \
-    && chown -R docker /opt/hostedtoolcache
+RUN export ARCH=$(echo ${TARGETPLATFORM} | cut -d / -f2) \
+    && if [ "$ARCH" = "arm64" ]; then export ARCH=aarch64 ; fi \
+    && if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "i386" ]; then export ARCH=x86_64 ; fi \
+    && mkdir -p /usr/libexec/docker/cli-plugins \
+    && curl -fLo /usr/libexec/docker/cli-plugins/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-${ARCH} \
+    && chmod +x /usr/libexec/docker/cli-plugins/docker-compose \
+    && ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose \
+    && which docker-compose \
+    && docker compose version
 
-# Run Cleanup
-RUN apt clean -y && apt autoremove --purge -y
+# We place the scripts in `/usr/bin` so that users who extend this image can
+# override them with scripts of the same name placed in `/usr/local/bin`.
+COPY entrypoint-dind.sh startup.sh logger.sh wait.sh graceful-stop.sh update-status /usr/bin/
+RUN chmod +x /usr/bin/entrypoint-dind.sh /usr/bin/startup.sh
 
-# copy the start.sh script & set permissions
-COPY start.sh start.sh
-RUN chmod +x start.sh
+# Copy the docker shim which propagates the docker MTU to underlying networks
+# to replace the docker binary in the PATH.
+COPY docker-shim.sh /usr/local/bin/docker
 
-# run as non-root user
-USER docker
+# Configure hooks folder structure.
+COPY hooks /etc/arc/hooks/
 
-ENTRYPOINT ["./start.sh"]
+VOLUME /var/lib/docker
+
+# Add the Python "User Script Directory" to the PATH
+ENV PATH="${PATH}:${HOME}/.local/bin"
+ENV ImageOS=ubuntu22
+
+RUN echo "PATH=${PATH}" > /etc/environment \
+    && echo "ImageOS=${ImageOS}" >> /etc/environment
+
+# No group definition, as that makes it harder to run docker.
+USER runner
+
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["entrypoint-dind.sh"]
