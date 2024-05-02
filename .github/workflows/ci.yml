@@ -80,8 +80,8 @@ jobs:
         uses: actions/attest-build-provenance@v1
         if: ${{ matrix.path == 'docker' }}
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.build-docker.outputs.digest }}
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          # subject-digest: ${{ steps.build-docker.outputs.digest }}
           push-to-registry: true
 
       - name: Build Docker image for ${{ matrix.path }}
@@ -101,6 +101,6 @@ jobs:
         uses: actions/attest-build-provenance@v1
         if: ${{ matrix.path == 'actions-runner-controller' }}
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc
-          subject-digest: ${{ steps.build-docker.outputs.digest }}
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc"
+          # subject-digest: ${{ steps.build-docker.outputs.digest }}
           push-to-registry: true
