@@ -18,16 +18,18 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
-      
+
       - name: Output Collector
         id: output-collector
         uses: collinmcneese/file-output-collector@main
@@ -62,6 +64,7 @@ jobs:
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'docker' }}
+        id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./docker
@@ -72,6 +75,14 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
+
+      - name: docker - Build Attestation
+        uses: actions/attest-build-provenance@v1
+        if: ${{ matrix.path == 'docker' }}
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-docker.outputs.digest }}
+          push-to-registry: true
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'actions-runner-controller' }}
@@ -85,3 +96,11 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}
+
+      - name: docker - Build Attestation
+        uses: actions/attest-build-provenance@v1
+        if: ${{ matrix.path == 'actions-runner-controller' }}
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc
+          subject-digest: ${{ steps.build-docker.outputs.digest }}
+          push-to-registry: true
