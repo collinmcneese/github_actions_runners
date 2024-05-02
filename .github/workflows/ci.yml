@@ -80,12 +80,13 @@ jobs:
         uses: actions/attest-build-provenance@v1
         if: ${{ matrix.path == 'docker' }}
         with:
-          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-          # subject-digest: ${{ steps.build-docker.outputs.digest }}
-          push-to-registry: true
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-docker.outputs.digest }}"
+          push-to-registry: false
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'actions-runner-controller' }}
+        id: build-actions-runner-controller
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./actions-runner-controller
@@ -101,6 +102,6 @@ jobs:
         uses: actions/attest-build-provenance@v1
         if: ${{ matrix.path == 'actions-runner-controller' }}
         with:
-          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc"
-          # subject-digest: ${{ steps.build-docker.outputs.digest }}
-          push-to-registry: true
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-actions-runner-controller.outputs.digest }}"
+          push-to-registry: false
