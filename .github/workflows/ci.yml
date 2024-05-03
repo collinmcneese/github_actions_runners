@@ -14,7 +14,8 @@ jobs:
     strategy:
       matrix:
         path: [docker]
-    runs-on: ubuntu-latest
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
     permissions:
       contents: read
       packages: write

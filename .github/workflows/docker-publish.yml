@@ -18,8 +18,9 @@ jobs:
     strategy:
       matrix:
         path: [docker]
+        platform: [ubuntu-latest, macos-latest]
     environment: publish
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform }}
 
     permissions:
       contents: read
