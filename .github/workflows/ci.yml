@@ -78,11 +78,19 @@ jobs:
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: ${{ matrix.platform }}
+          provenance: true
+          sbom: true
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
+
+      - name: debug build
+        run: |
+          echo "digest: ${{ steps.build-docker.outputs.digest }}"
+          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
         uses: actions/attest-build-provenance@v1
