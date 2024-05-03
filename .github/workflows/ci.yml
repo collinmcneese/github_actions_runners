@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         path: [docker]
+        platform: [linux/amd64, linux/arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,6 +41,12 @@ jobs:
         run: |
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
@@ -70,11 +77,19 @@ jobs:
           context: ./docker
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: ${{ matrix.platform }}
+          load: true
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
+
+      - name: debug build
+        run: |
+          echo "digest: ${{ steps.build-docker.outputs.digest }}"
+          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
         uses: actions/attest-build-provenance@v1
