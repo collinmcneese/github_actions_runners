@@ -1,4 +1,4 @@
-ARG PLATFORM="linux/amd64"
+ARG PLATFORM
 ARG BASE_IMAGE="ubuntu:22.04"
 
 # Base image information

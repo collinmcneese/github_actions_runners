@@ -18,9 +18,8 @@ jobs:
     strategy:
       matrix:
         path: [docker]
-        platform: [ubuntu-latest, macos-latest]
     environment: publish
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -36,10 +35,17 @@ jobs:
         uses: collinmcneese/file-output-collector@main
         with:
           file: "./VERSION"
+
       - name: Prep
         run: |
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
@@ -47,7 +53,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Extract metadata (tags, labels) for ${{ matrix.path }}
         if: ${{ matrix.path == 'docker' }}
@@ -71,6 +76,7 @@ jobs:
           context: ./docker
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
