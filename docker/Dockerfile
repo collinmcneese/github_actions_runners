@@ -1,8 +1,7 @@
-ARG PLATFORM
 ARG BASE_IMAGE="ubuntu:22.04"
 
 # Base image information
-FROM --platform=${PLATFORM} ${BASE_IMAGE}
+FROM ${BASE_IMAGE}
 
 ARG RUNNER_VERSION
 RUN \
