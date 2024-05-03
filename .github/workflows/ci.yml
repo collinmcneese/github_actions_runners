@@ -101,7 +101,7 @@ jobs:
 
   build-actions-runner-image:
     env:
-      IMAGE_NAME: actions-runner
+      IMAGE_NAME: collinmcneese/actions-runner
     strategy:
       matrix:
         path: [docker]
