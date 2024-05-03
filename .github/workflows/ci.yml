@@ -78,8 +78,6 @@ jobs:
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: ${{ matrix.platform }}
-          provenance: true
-          sbom: true
           load: true
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
