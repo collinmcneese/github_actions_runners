@@ -82,4 +82,4 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
           subject-digest: ${{ steps.build-docker.outputs.digest }}
-          push-to-registry: true
+          push-to-registry: false
