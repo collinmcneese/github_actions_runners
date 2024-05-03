@@ -13,21 +13,23 @@ jobs:
   build-image:
     strategy:
       matrix:
-        path: [docker, actions-runner-controller]
+        path: [docker, actions-runner-controller, arc-container-dind]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
-      
+
       - name: Output Collector
         id: output-collector
         uses: collinmcneese/file-output-collector@main
@@ -62,6 +64,7 @@ jobs:
 
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'docker' }}
+        id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./docker
@@ -73,8 +76,17 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
 
+      - name: docker - Build Attestation
+        uses: actions/attest-build-provenance@v1
+        if: ${{ matrix.path == 'docker' }}
+        with:
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-docker.outputs.digest }}"
+          push-to-registry: false
+
       - name: Build Docker image for ${{ matrix.path }}
         if: ${{ matrix.path == 'actions-runner-controller' }}
+        id: build-actions-runner-controller
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./actions-runner-controller
@@ -85,3 +97,33 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}
+
+      - name: docker - Build Attestation
+        uses: actions/attest-build-provenance@v1
+        if: ${{ matrix.path == 'actions-runner-controller' }}
+        with:
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-actions-runner-controller.outputs.digest }}"
+          push-to-registry: false
+
+      - name: Build and Push Docker image for ${{ matrix.path }}
+        if: ${{ matrix.path == 'arc-container-dind' }}
+        id: build-arc-container-dind
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        with:
+          context: ./arc-container-dind
+          push: false
+          labels: ${{ steps.meta-arc.outputs.labels }}
+          build-args: |
+            RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc-container-dind:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc-container-dind:${{ steps.output-collector.outputs.output }}
+
+      - name: arc-container-dind - Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        if: ${{ matrix.path == 'arc-container-dind' }}
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-arc-container-dind:${{ steps.output-collector.outputs.output }}
+          subject-digest: ${{ steps.build-arc-container-dind.outputs.digest }}
+          push-to-registry: false
