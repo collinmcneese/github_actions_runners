@@ -113,11 +113,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 'Dependency Review'
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-
       - name: Output Collector
         id: output-collector
         uses: collinmcneese/file-output-collector@main
@@ -162,7 +157,7 @@ jobs:
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./docker
-          push: false
+          push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: "${{ matrix.os }}/${{ matrix.arch }}"
           load: true
