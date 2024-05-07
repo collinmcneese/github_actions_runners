@@ -11,9 +11,6 @@ env:
 
 jobs:
   build-docker-image:
-    strategy:
-      matrix:
-        platform: [linux/amd64, linux/arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,7 +39,6 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        if: ${{ matrix.platform == 'linux/arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -68,10 +64,11 @@ jobs:
           context: ./docker
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: ${{ matrix.platform }}
+          platforms: |
+            linux/amd64
+            linux/arm64
           load: true
           provenance: false
-          sbom: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
@@ -152,7 +149,6 @@ jobs:
             linux/arm64
           load: true
           provenance: false
-          sbom: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.0
