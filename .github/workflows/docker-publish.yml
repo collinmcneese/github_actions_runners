@@ -17,7 +17,6 @@ jobs:
   build-and-push-image:
     strategy:
       matrix:
-        path: [docker]
         platform: [linux/amd64, linux/arm64]
     environment: publish
     runs-on: ubuntu-latest
@@ -43,6 +42,7 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
+        if: ${{ matrix.platform == 'linux/arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -55,22 +55,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
-        if: ${{ matrix.path == 'docker' }}
+      - name: Extract metadata (tags, labels)
         id: meta-docker
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
-        if: ${{ matrix.path == 'actions-runner-controller' }}
-        id: meta-arc
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and Push Docker image for ${{ matrix.path }}
-        if: ${{ matrix.path == 'docker' }}
+      - name: Build and Push Docker image
         id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
@@ -87,7 +78,6 @@ jobs:
 
       - name: docker - Attest build provenance
         uses: actions/attest-build-provenance@v1
-        if: ${{ matrix.path == 'docker' }}
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
           subject-digest: ${{ steps.build-docker.outputs.digest }}
@@ -99,7 +89,6 @@ jobs:
       IMAGE_NAME: collinmcneese/actions-runner
     strategy:
       matrix:
-        path: [docker]
         os: [linux]
         arch: [amd64, arm64]
     runs-on: ubuntu-latest
@@ -125,6 +114,7 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
+        if: ${{ matrix.arch == 'arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -137,22 +127,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
-        if: ${{ matrix.path == 'docker' }}
+      - name: Extract metadata (tags, labels)
         id: meta-docker
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Extract metadata (tags, labels) for ${{ matrix.path }}
-        if: ${{ matrix.path == 'actions-runner-controller' }}
-        id: meta-arc
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build Docker image for ${{ matrix.path }}
-        if: ${{ matrix.path == 'docker' }}
+      - name: Build Docker image
         id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
@@ -180,7 +161,6 @@ jobs:
 
       - name: docker - Build Attestation
         uses: actions/attest-build-provenance@v1
-        if: ${{ matrix.path == 'docker' }}
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
