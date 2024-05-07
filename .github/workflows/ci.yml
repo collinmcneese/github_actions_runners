@@ -68,7 +68,6 @@ jobs:
             linux/amd64
             linux/arm64
           load: true
-          provenance: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
@@ -148,7 +147,6 @@ jobs:
             linux/amd64
             linux/arm64
           load: true
-          provenance: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.0
