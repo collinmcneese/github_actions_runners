@@ -70,6 +70,8 @@ jobs:
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: ${{ matrix.platform }}
           load: true
+          provenance: false
+          sbom: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
@@ -142,6 +144,8 @@ jobs:
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: "${{ matrix.os }}/${{ matrix.arch }}"
           load: true
+          provenance: false
+          sbom: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             TARGETOS=${{ matrix.os }}
