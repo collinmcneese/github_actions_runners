@@ -94,10 +94,6 @@ jobs:
   build-actions-runner-image:
     env:
       IMAGE_NAME: collinmcneese/actions-runner
-    strategy:
-      matrix:
-        os: [linux]
-        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -126,7 +122,6 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        if: ${{ matrix.arch == 'arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -152,14 +147,14 @@ jobs:
           context: ./actions-runner
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: "${{ matrix.os }}/${{ matrix.arch }}"
+          platforms: |
+            linux/amd64
+            linux/arm64
           load: true
           provenance: false
           sbom: false
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
-            TARGETOS=${{ matrix.os }}
-            TARGETARCH=${{ matrix.arch }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.0
             DOCKER_VERSION=25.0.4
             BUILDX_VERSION=0.13.1
