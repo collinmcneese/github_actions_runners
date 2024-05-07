@@ -156,7 +156,7 @@ jobs:
         id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
-          context: ./docker
+          context: ./actions-runner
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
           platforms: "${{ matrix.os }}/${{ matrix.arch }}"
