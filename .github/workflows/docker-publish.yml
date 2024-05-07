@@ -14,13 +14,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push-image:
-    strategy:
-      matrix:
-        platform: [linux/amd64, linux/arm64]
-    environment: publish
+  build-docker-image:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
@@ -30,6 +25,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Output Collector
         id: output-collector
         uses: collinmcneese/file-output-collector@main
@@ -42,7 +38,6 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        if: ${{ matrix.platform == 'linux/arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -61,38 +56,39 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and Push Docker image
+      - name: Build Docker image
         id: build-docker
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./docker
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: ${{ matrix.platform }}
-          load: true
-          provenance: false
-          sbom: false
+          platforms: |
+            linux/amd64
+            linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
 
-      - name: docker - Attest build provenance
+      - name: debug build
+        run: |
+          echo "digest: ${{ steps.build-docker.outputs.digest }}"
+          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
+
+      - name: docker - Build Attestation
+        continue-on-error: true
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
-          subject-digest: ${{ steps.build-docker.outputs.digest }}
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-docker.outputs.digest }}"
           push-to-registry: false
-
 
   build-actions-runner-image:
     env:
       IMAGE_NAME: collinmcneese/actions-runner
-    strategy:
-      matrix:
-        os: [linux]
-        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -116,7 +112,6 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        if: ${{ matrix.arch == 'arm64' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -142,14 +137,11 @@ jobs:
           context: ./actions-runner
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: "${{ matrix.os }}/${{ matrix.arch }}"
-          load: true
-          provenance: false
-          sbom: false
+          platforms: |
+            linux/amd64
+            linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
-            TARGETOS=${{ matrix.os }}
-            TARGETARCH=${{ matrix.arch }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.0
             DOCKER_VERSION=25.0.4
             BUILDX_VERSION=0.13.1
@@ -164,6 +156,7 @@ jobs:
           echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
+        continue-on-error: true
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
