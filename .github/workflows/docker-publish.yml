@@ -162,3 +162,80 @@ jobs:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
           push-to-registry: false
+
+  build-runner-no-dind-image:
+    env:
+      IMAGE_NAME: collinmcneese/runner-no-dind
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Output Collector
+        id: output-collector
+        uses: collinmcneese/file-output-collector@main
+        with:
+          file: "./VERSION"
+
+      - name: Prep
+        run: |
+          echo Building with Runner version ${{ steps.output-collector.outputs.output }}
+          echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta-docker
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build Docker image
+        id: build-docker
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        with:
+          context: ./runner-no-dind
+          push: true
+          labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+          build-args: |
+            RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
+            RUNNER_CONTAINER_HOOKS_VERSION=0.6.0
+            DOCKER_VERSION=25.0.4
+            BUILDX_VERSION=0.13.1
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
+
+      - name: debug build
+        run: |
+          echo "digest: ${{ steps.build-docker.outputs.digest }}"
+          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
+
+      - name: docker - Build Attestation
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
+          subject-digest: "${{ steps.build-docker.outputs.digest }}"
+          push-to-registry: false
