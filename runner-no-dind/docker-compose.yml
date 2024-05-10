@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  runner:
+    build: .
+    stop_grace_period: 60s
+    restart: always
+    privileged: true
+    env_file:
+      - ./.env
