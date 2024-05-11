@@ -8,6 +8,8 @@ on:
     paths:
     - VERSION
     - 'docker/**'
+    - 'runner-no-dind/**'
+    - 'actions-runner/**'
 
 env:
   REGISTRY: ghcr.io
