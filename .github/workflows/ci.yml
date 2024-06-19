@@ -59,7 +59,7 @@ jobs:
 
       - name: Build Docker image
         id: build-docker
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
+        uses: docker/build-push-action@c382f710d39a5bb4e430307530a720f50c2d3318
         with:
           context: ./docker
           push: false
@@ -138,7 +138,7 @@ jobs:
 
       - name: Build Docker image
         id: build-docker
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
+        uses: docker/build-push-action@c382f710d39a5bb4e430307530a720f50c2d3318
         with:
           context: ./actions-runner
           push: false
@@ -220,7 +220,7 @@ jobs:
 
       - name: Build Docker image
         id: build-docker
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
+        uses: docker/build-push-action@c382f710d39a5bb4e430307530a720f50c2d3318
         with:
           context: ./runner-no-dind
           push: false
