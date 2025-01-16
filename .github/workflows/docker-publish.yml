@@ -17,12 +17,7 @@ env:
 
 jobs:
   build-docker-image:
-    strategy:
-      matrix:
-        os:
-        - ubuntu-latest
-        - ubuntu-24.04-arm
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     environment: publish
     permissions:
       contents: read
@@ -44,6 +39,9 @@ jobs:
         run: |
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -68,6 +66,9 @@ jobs:
           context: ./docker
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
@@ -91,12 +92,7 @@ jobs:
   build-actions-runner-image:
     env:
       IMAGE_NAME: collinmcneese/actions-runner
-    strategy:
-      matrix:
-        os:
-        - ubuntu-latest
-        - ubuntu-24.04-arm
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     environment: publish
     permissions:
       contents: read
@@ -118,6 +114,9 @@ jobs:
         run: |
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -142,6 +141,9 @@ jobs:
           context: ./actions-runner
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
@@ -168,12 +170,7 @@ jobs:
   build-runner-no-dind-image:
     env:
       IMAGE_NAME: collinmcneese/runner-no-dind
-    strategy:
-      matrix:
-        os:
-        - ubuntu-latest
-        - ubuntu-24.04-arm
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     environment: publish
     permissions:
       contents: read
@@ -195,6 +192,9 @@ jobs:
         run: |
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -219,6 +219,9 @@ jobs:
           context: ./runner-no-dind
           push: true
           labels: ${{ steps.meta-docker.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
