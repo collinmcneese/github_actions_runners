@@ -74,9 +74,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
 
       - name: debug build
+        env:
+          METADATA: ${{ steps.build-docker.outputs.metadata }}
         run: |
           echo "digest: ${{ steps.build-docker.outputs.digest }}"
-          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "metadata: $METADATA"
           echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
@@ -156,9 +158,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
 
       - name: debug build
+        env:
+          METADATA: ${{ steps.build-docker.outputs.metadata }}
         run: |
           echo "digest: ${{ steps.build-docker.outputs.digest }}"
-          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "metadata: $METADATA"
           echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
@@ -238,9 +242,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}
 
       - name: debug build
+        env:
+          METADATA: ${{ steps.build-docker.outputs.metadata }}
         run: |
           echo "digest: ${{ steps.build-docker.outputs.digest }}"
-          echo "metadata: ${{ steps.build-docker.outputs.metadata }}"
+          echo "metadata: $METADATA"
           echo "imageid: ${{ steps.build-docker.outputs.imageid }}"
 
       - name: docker - Build Attestation
