@@ -83,7 +83,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
@@ -167,7 +167,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
@@ -251,7 +251,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
