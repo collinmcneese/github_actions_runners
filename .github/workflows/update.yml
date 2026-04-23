@@ -62,10 +62,32 @@ jobs:
               fs.writeFileSync(versionPath, latest)
               return changed
             }
+      - name: Check for existing PR
+        id: check-existing-pr
+        if: steps.update-runner-version.outputs.result == 'true'
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const latest = '${{ needs.get-runner-version.outputs.latest }}';
+            const title = `Update runner version to ${latest}`;
+            const pulls = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const existing = pulls.data.find(pr => pr.title === title);
+            if (existing) {
+              console.log(`Open PR already exists for version ${latest}: #${existing.number} - ${existing.html_url}`);
+              return 'true'
+            }
+            console.log(`No existing open PR found for version ${latest}, proceeding.`);
+            return 'false'
       - name: Log changed
         run: echo 'VERSION changed -- ${{ steps.update-runner-version.outputs.result }}'
       - name: Commit Changes
-        if: steps.update-runner-version.outputs.result == 'true'
+        if: steps.update-runner-version.outputs.result == 'true' && steps.check-existing-pr.outputs.result == 'false'
         run: |
           # If the runner version has changed, commit the change, push the branch and create a pull request
           git config --global user.name 'github-actions[bot]'
@@ -73,7 +95,7 @@ jobs:
           git add VERSION
           git commit -m 'Update runner version to ${{ needs.get-runner-version.outputs.latest }}'
       - name: Create Pull Request
-        if: steps.update-runner-version.outputs.result == 'true'
+        if: steps.update-runner-version.outputs.result == 'true' && steps.check-existing-pr.outputs.result == 'false'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{secrets.GITHUB_TOKEN}}
