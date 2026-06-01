@@ -27,11 +27,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Output Collector
         id: output-collector
-        uses: collinmcneese/file-output-collector@main
+        uses: collinmcneese/file-output-collector@22df6011c851472ffc2e2870dbbbcc29834dcd57 # main
         with:
           file: "./VERSION"
 
@@ -41,10 +41,10 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
@@ -85,7 +85,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
@@ -104,11 +104,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Output Collector
         id: output-collector
-        uses: collinmcneese/file-output-collector@main
+        uses: collinmcneese/file-output-collector@22df6011c851472ffc2e2870dbbbcc29834dcd57 # main
         with:
           file: "./VERSION"
 
@@ -118,10 +118,10 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
@@ -165,7 +165,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"
@@ -184,11 +184,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Output Collector
         id: output-collector
-        uses: collinmcneese/file-output-collector@main
+        uses: collinmcneese/file-output-collector@22df6011c851472ffc2e2870dbbbcc29834dcd57 # main
         with:
           file: "./VERSION"
 
@@ -198,10 +198,10 @@ jobs:
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
@@ -245,7 +245,7 @@ jobs:
 
       - name: docker - Build Attestation
         continue-on-error: true
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
         with:
           subject-name: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.output-collector.outputs.output }}"
           subject-digest: "${{ steps.build-docker.outputs.digest }}"

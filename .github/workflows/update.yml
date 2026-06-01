@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Get latest runner version
         id: get-runner-version
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
@@ -36,10 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Update runner version
         id: update-runner-version
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
@@ -65,7 +65,7 @@ jobs:
       - name: Check for existing PR
         id: check-existing-pr
         if: steps.update-runner-version.outputs.result == 'true'
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
@@ -96,7 +96,7 @@ jobs:
           git commit -m 'Update runner version to ${{ needs.get-runner-version.outputs.latest }}'
       - name: Create Pull Request
         if: steps.update-runner-version.outputs.result == 'true' && steps.check-existing-pr.outputs.result == 'false'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           commit-message: Update runner version to ${{ needs.get-runner-version.outputs.latest }}
