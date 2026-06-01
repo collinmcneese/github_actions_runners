@@ -1,16 +1,20 @@
 version: 2
 updates:
-  - package-ecosystem: "docker"
-    directory: "/docker"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
+- package-ecosystem: "docker"
+  directory: "/docker"
+  schedule:
+    interval: "weekly"
+  cooldown:
+    default-days: 7
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  groups:
       # This is the name of your group, it will be used in PR titles and branch names
-      actions-deps:
+    actions-deps:
         # A pattern can be...
-        patterns:
-          - "*"
+      patterns:
+      - "*"
+  cooldown:
+    default-days: 7
