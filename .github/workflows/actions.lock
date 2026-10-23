@@ -56,7 +56,7 @@ dependencies:
         repo_id: 205262760
     'collinmcneese/file-output-collector@main':
         ref: 'main'
-        commit: 'sha1-22df6011c851472ffc2e2870dbbbcc29834dcd57'
+        commit: 'sha1-e7d10fdb08f1944d7d00e86543ffd0974a4f88af'
         owner_id: 8185808
         repo_id: 637814567
     'docker/build-push-action@v7.4.0':
