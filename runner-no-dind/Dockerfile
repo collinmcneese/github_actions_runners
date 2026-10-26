@@ -3,11 +3,6 @@ ARG BASE_IMAGE="ubuntu:22.04"
 # Base image information
 FROM ${BASE_IMAGE}
 
-ARG RUNNER_VERSION
-RUN \
-    # Check for mandatory build arguments
-    : "${RUNNER_VERSION:?Build argument RUNNER_VERSION needs to be set and non-empty.}"
-
 # Add a non-priviledged user
 RUN useradd -m runner
 
@@ -41,27 +36,34 @@ RUN apt update \
         dumb-init \
         nodejs \
         rsync \
-        gosu
+        gosu \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install GitHub CLI
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && sudo apt update \
-    && sudo apt install gh -y
+# Configure package repositories and install additional dependencies
+RUN set -eu; \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg; \
+    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
+    curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb; \
+    dpkg -i /tmp/packages-microsoft-prod.deb; \
+    rm /tmp/packages-microsoft-prod.deb; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends gh apt-transport-https dotnet-sdk-6.0; \
+    rm -rf /var/lib/apt/lists/*
 
-# Fetch and extract the GitHub Actions Runner
-RUN cd /home/runner && mkdir actions-runner && cd actions-runner \
-    && curl -O -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
-    && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
-
-# Install GitHub Actions Runner pre-requisites
-RUN curl -O -L https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb  \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb
-
-RUN apt update \
-    && apt install -y apt-transport-https dotnet-sdk-6.0  --no-install-recommends
+ARG RUNNER_VERSION
+ARG TARGETARCH
+RUN : "${RUNNER_VERSION:?Build argument RUNNER_VERSION needs to be set and non-empty.}" \
+    && case "$TARGETARCH" in \
+        amd64) RUNNER_ARCH=x64 ;; \
+        arm64) RUNNER_ARCH=arm64 ;; \
+        *) echo "Unsupported runner architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac \
+    && mkdir -p /home/runner/actions-runner \
+    && chown runner /home/runner/actions-runner \
+    && curl -fsSL -o /tmp/actions-runner.tar.gz "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz" \
+    && gosu runner tar -xzf /tmp/actions-runner.tar.gz -C /home/runner/actions-runner \
+    && rm /tmp/actions-runner.tar.gz
 
 # Create hostedtoolcache directory and set permissions
 RUN mkdir -p /opt/hostedtoolcache \
@@ -71,8 +73,7 @@ RUN mkdir -p /opt/hostedtoolcache \
 RUN apt clean -y && apt autoremove --purge -y
 
 # copy the start.sh script & set permissions
-COPY start.sh start.sh
-RUN chmod +x start.sh
+COPY --chown=runner:runner --chmod=755 start.sh start.sh
 
 # run as non-root user
 USER runner

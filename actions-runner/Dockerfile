@@ -1,7 +1,7 @@
 # based on actions/runner
 
 # Source: https://github.com/dotnet/dotnet-docker
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0-jammy as build
+FROM mcr.microsoft.com/dotnet/runtime-deps:6.0-jammy AS build
 
 # ARG TARGETOS=linux
 # ARG TARGETARCH=arm64
@@ -12,14 +12,16 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:6.0-jammy as build
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG RUNNER_VERSION
 ARG RUNNER_CONTAINER_HOOKS_VERSION
 ARG DOCKER_VERSION
 ARG BUILDX_VERSION
 
-RUN apt update -y && apt install curl unzip -y
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /actions-runner
+ARG RUNNER_VERSION
 RUN export RUNNER_ARCH=${TARGETARCH} \
     && if [ "$RUNNER_ARCH" = "amd64" ]; then export RUNNER_ARCH=x64 ; fi \
     && curl -f -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-${TARGETOS}-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz \

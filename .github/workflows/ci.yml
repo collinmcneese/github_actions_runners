@@ -11,7 +11,14 @@ env:
 
 jobs:
   build-docker-image:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
@@ -38,9 +45,6 @@ jobs:
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4.4.0
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.4.1
 
@@ -64,9 +68,7 @@ jobs:
           context: ./docker
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: |
-            linux/amd64
-            linux/arm64
+          platforms: ${{ matrix.platform }}
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
           tags: |
@@ -92,7 +94,14 @@ jobs:
   build-actions-runner-image:
     env:
       IMAGE_NAME: collinmcneese/actions-runner
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
@@ -119,9 +128,6 @@ jobs:
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4.4.0
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.4.1
 
@@ -145,9 +151,7 @@ jobs:
           context: ./actions-runner
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: |
-            linux/amd64
-            linux/arm64
+          platforms: ${{ matrix.platform }}
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
@@ -176,7 +180,14 @@ jobs:
   build-runner-no-dind-image:
     env:
       IMAGE_NAME: collinmcneese/runner-no-dind
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
@@ -203,9 +214,6 @@ jobs:
           echo Building with Runner version ${{ steps.output-collector.outputs.output }}
           echo ${{ steps.output-collector.outputs.output }} | grep 2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4.4.0
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.4.1
 
@@ -229,9 +237,7 @@ jobs:
           context: ./runner-no-dind
           push: false
           labels: ${{ steps.meta-docker.outputs.labels }}
-          platforms: |
-            linux/amd64
-            linux/arm64
+          platforms: ${{ matrix.platform }}
           build-args: |
             RUNNER_VERSION=${{ steps.output-collector.outputs.output }}
             RUNNER_CONTAINER_HOOKS_VERSION=0.6.1
